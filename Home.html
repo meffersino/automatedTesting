@@ -1,0 +1,65 @@
+<html>
+    <head>
+        <title>LiveConnect - Java-Javascript communnication demo</title>
+    </head>
+    <body>
+        <p> Hello World </p>
+            <center>
+              <applet id="testApplet"
+                  code="CommunnicationClass.class"
+                 width="200" height="80"
+                    >
+             </applet>
+            </center>
+        <p id="ready"></p>
+        <p id="test"></p>
+    
+    <script type="text/javascript">
+    alert("Strarting up")
+    var five = require('johnny-five')
+    alert("johnny-five required")
+    var servoA
+    var servoB, servoC,
+    positionA, positionB, positionC,
+    board = new five.Board()
+
+//var comms = new CommunicationClass();
+alert("Initialised")
+document.write("My first test");
+board.on("ready", function() {
+    var led = new five.Led();
+    led.blink(500);
+    servoA = new five.Servo({
+        pin: 10,
+        range: [1,180],
+        startAt: 60
+    });
+    servoB = new five.Servo({
+        pin: 11,
+        range: [1,180],
+        startAt: 60
+    });
+    ServoC = new five.Servo({
+        pin: 12,
+        range: [1,180],
+        startAt: 60
+    });
+    positionA = 60;
+    positionB = 60;
+    positionC = 60;
+});
+
+function tap() {
+    servoA.to(positionA + 10);
+    servoB.to(positionB + 10);
+    servoC.to(positionC + 10);
+    setTimeout(myFunction(), 100);
+    servoA.to(positionA);
+    servoB.to(positionB);
+    servoC.to(positionC);
+}
+document.write("Waiting for device to connect...");
+console.log("Waiting for device to connect...");
+    </script>
+    </body>
+</html>
