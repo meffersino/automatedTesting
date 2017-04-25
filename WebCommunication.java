@@ -4,6 +4,7 @@ import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.Collection;
+import java.util.ArrayList;
 
 import org.java_websocket.WebSocket;
 import org.java_websocket.WebSocketImpl;
@@ -27,6 +28,10 @@ public class WebCommunication extends WebSocketServer{
 		super(address);
 	}
 
+	public void onRobertReady() {
+		this.sendByteToAll();
+	}
+
 	@Override
 	public void onOpen(WebSocket conn, ClientHandshake handshake) {
 		this.sendToAll("new connection: " + handshake.getResourceDescriptor());
@@ -41,6 +46,10 @@ public class WebCommunication extends WebSocketServer{
 
 	@Override
 	public void onMessage(WebSocket conn, String message) {
+		if(message.equalsIgnoreCase("Robert ready")) {
+				System.out.println("Confirmed robot ready");
+				onRobertReady();
+			}
 		this.sendToAll(message);
 		System.out.println(conn + ": " + message);
 	}
@@ -65,7 +74,10 @@ public class WebCommunication extends WebSocketServer{
 		while (true) {
 			String in = sysin.readLine();
 			s.sendToAll( in );
-			if(in.equals("exit")) {
+			if(in.equalsIgnoreCase("Robert ready")) {
+				System.out.println("Confirmed robot ready");
+				s.onRobertReady();
+			}else if(in.equals("exit")) {
 				s.stop();
 				break;
 			} else if(in.equals("restart")) {
@@ -100,5 +112,32 @@ public class WebCommunication extends WebSocketServer{
 		}
 	}
 
+	public void sendByteToAll() {
+		String[] testStr = {"move","*","0","*","0","*","-140","*"};
+		byte[] tester = stringToByte(testStr);
+		Collection<WebSocket> connect = connections();
+		synchronized (connect) {
+			for(WebSocket c:connect) {
+				c.send(tester);
+			}
+		}
+	}
 
+	private static byte[] stringToByte(String[] stringArray) {
+        ArrayList<Byte> tempData = new ArrayList<Byte>();
+        byte[] finishedData;
+        for (int i = 0; i < stringArray.length; i++) {
+            String string = stringArray[i];
+            finishedData = string.getBytes();
+            for(byte x:finishedData) {
+                tempData.add(x);
+            }
+        }
+        Byte[] dataByte = tempData.toArray(new Byte[tempData.size()]);
+        byte[] data = new byte[dataByte.length];
+        for(int i = 0; i < dataByte.length; i++) {
+            data[i] = dataByte[i];
+        }
+        return data;
+    }
 }

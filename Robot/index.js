@@ -1,7 +1,9 @@
 var five = require('johnny-five'),
 	ws = require('ws'),
 	ik = require("./ik"),
-	board = new five.Board();
+  sleep = require('sleep'),
+	board = new five.Board(),
+  servo1,servo2,servo3;
 
 var server = new ws("ws://127.0.0.1:8080/");
 
@@ -11,38 +13,39 @@ board.on("ready", function() {
 	servo1 = new five.Servo({
 		pin: 12,
 		range: [0,90],
-		startAt: 60
+		startAt: 30
 	});
 	servo2 = new five.Servo({
 		pin: 10,
 		range: [0,90],
-		startAt: 60
+		startAt: 30
 	});
 	servo3 = new five.Servo({
 		pin: 11,
 		range: [0,90],
-		startAt: 60
+		startAt: 30
 	});
-	position1 = 45;
-	position2 = 45;
-	position3 = 45;
+	position1 = 30;
+	position2 = 30;
+	position3 = 30;
+
+  allServos = function(position) {
+      sleep.msleep(500);
+      servo1.to(position);
+      servo2.to(position);
+      servo3.to(position);
+      position1,position2,position3 = position;
+      
+  }
 
 	tap = function() {
-	servo1.to(position1 + 10);
-	servo2.to(position2 + 10);
-	servo3.to(position3 + 10);
+	allServos(position1+10);
+  
 	//setTimeout(myFunction(), 100);
-	servo1.to(position1-10);
-	servo2.to(position2-10);
-	servo3.to(position3-10);
+	allServos(position1-10);
 	}
 
-	allServos = function(position) {
-    	servo1.to(position);
-    	servo2.to(position);
-    	servo3.to(position);
-    	position1,position2,position3 = position;
-    }
+	
 
 	board.repl.inject({
       servo1: servo1,
@@ -54,30 +57,9 @@ board.on("ready", function() {
       move: allServos,
       tap: tap
     });
+
+  server.send("Robert ready");
 });
-
-
-
-server.onopen = function() {
-    console.log("Opened!");
-    server.send("Robert connected");
-};
-
-server.onmessage = function (evt) {
-    console.log("Message: " + evt.data);
-};
-
-server.onclose = function() {
-    console.log("Robert Left");
-};
-
-server.onerror = function(err) {
-    console.log("Error: " + err);
-};
-
-console.log("Waiting for device to connect...");
-
-
 
 /*NOT MY CODE*/
 
@@ -123,6 +105,68 @@ go = function(x, y, z) {
   console.log(angles);
 }
 
+
 position = function() {
   return ik.forward(servo1.last.degrees, servo2.last.degrees, servo3.last.degrees);
 }
+
+/*MY CODE AGAIN*/
+
+moveTo = function(x,y,z) {
+  var tempZ = z+20;
+  setTimeout(function(){ go(x,y,tempZ);}, 0);
+  setTimeout(function(){ go(x,y,z);}, 500);
+}
+
+home = function() {
+  setTimeout(function(){ go(0,0,-140);}, 0);
+}
+
+disconnect =function() {
+  moveTo(-20,-75,-165);
+}
+
+
+server.onopen = function() {
+    console.log("Opened!");
+    server.send("index.js connected");
+};
+
+server.onmessage = function (evt) {
+    var strArray = [];
+    var func = evt.data.toString();
+    var tempString = "";
+    for(var i = 0;i<func.length;i++) {
+      
+      //if(!func.charAt(i) === "*") {
+      if(!(/[*]/.test(func.charAt(i)))){
+        tempString += func.charAt(i);
+      } else {
+        strArray[strArray.length] = tempString;
+        tempString = "";
+      }
+      
+    }
+    
+    if(strArray[0] == "move") {
+        go(parseInt(strArray[1]),parseInt(strArray[2]),parseInt(strArray[3]));
+    } else if(strArray[0] == "tap") {
+        //tap();
+    } else if(strArray[0] == "disconnect") {
+       // disconnect();
+    } 
+    console.log("Message: " + evt.data);
+};
+
+server.onclose = function() {
+    console.log("Robert Left");
+};
+
+server.onerror = function(err) {
+    console.log("Error: " + err);
+};
+
+console.log("Waiting for device to connect...");
+
+
+
