@@ -12,8 +12,20 @@ import org.java_websocket.framing.Framedata;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 
+
+/**
+* Sets up a WebSocket server
+*@file WebCommunication.java
+*@author Michael Jeffrey, Jason Huggins
+*@date 30/4/2017
+*/
+
+
 public class WebCommunication extends WebSocketServer{
 	
+	/**
+	* The port which the server shall be hosted on
+	*/
 	public static final int PORT = 8080;
 
 	public WebCommunication() throws UnknownHostException {
@@ -28,32 +40,50 @@ public class WebCommunication extends WebSocketServer{
 		super(address);
 	}
 
-	public void onRobertReady() {
-		this.sendByteToAll();
-	}
-
+	/**
+	* When a connection is made, announce this to all other connections 
+	*@param conn The connection instance 
+	*@param handshake  The HTTP Request-URI
+	*/
 	@Override
 	public void onOpen(WebSocket conn, ClientHandshake handshake) {
 		this.sendToAll("new connection: " + handshake.getResourceDescriptor());
 		System.out.println(conn.getRemoteSocketAddress().getAddress().getHostAddress() + " entered the room!");
 	}
 
+	/**
+	* When a connection is ended, announce this to all other connections 
+	*@param conn The connection instance 
+	*@param code The code representing why the connection ended
+	*@param reason The string representing why the connection ended
+	*@param remote States whether the connection ending was initiated by the remote host
+	*/
 	@Override
 	public void onClose(WebSocket conn, int code, String reason, boolean remote) {
 		this.sendToAll(conn + " has left the room!");
 		System.out.println(conn + " has left the room!");
 	}
 
+	/**
+	* When a is received, announce this to all other connections 
+	*@param conn The connection instance 
+	*@param message The message to be sent on
+	*/
 	@Override
 	public void onMessage(WebSocket conn, String message) {
-		if(message.equalsIgnoreCase("Robert ready")) {
-				System.out.println("Confirmed robot ready");
-				onRobertReady();
-			}
+		// if(message.equalsIgnoreCase("Robert ready")) {
+		// 		System.out.println("Confirmed robot ready");
+		// 		sendByteToAll();
+		// 	}
 		this.sendToAll(message);
 		System.out.println(conn + ": " + message);
 	}
 
+	/**
+	* When a message is received, announce this to all other connections 
+	*@param conn The connection instance 
+	*@param fragment The frame fragment
+	*/
 	@Override
 	public void onFragment(WebSocket conn, Framedata fragment) {
 		System.out.println("received fragment: " + fragment);
@@ -76,7 +106,7 @@ public class WebCommunication extends WebSocketServer{
 			s.sendToAll( in );
 			if(in.equalsIgnoreCase("Robert ready")) {
 				System.out.println("Confirmed robot ready");
-				s.onRobertReady();
+				s.sendByteToAll();
 			}else if(in.equals("exit")) {
 				s.stop();
 				break;
@@ -87,6 +117,12 @@ public class WebCommunication extends WebSocketServer{
 			}
 		}
 	}
+
+	/**
+	* When an error is received, print the error
+	*@param conn The connection instance 
+	*@param ex The error
+	*/
 	@Override
 	public void onError(WebSocket conn, Exception ex) {
 		ex.printStackTrace();
@@ -96,13 +132,9 @@ public class WebCommunication extends WebSocketServer{
 	}
 
 	/**
-	 * Sends <var>text</var> to all currently connected WebSocket clients.
-	 * 
-	 * @param text
-	 *            The String to send across the network.
-	 * @throws InterruptedException
-	 *             When socket related I/O errors occur.
-	 */
+	* Sends <var>text</var> to all currently connected WebSocket clients
+	* @param text The String to send across the network
+	*/
 	public void sendToAll(String text) {
 		Collection<WebSocket> connect = connections();
 		synchronized (connect) {
@@ -111,7 +143,9 @@ public class WebCommunication extends WebSocketServer{
 			}
 		}
 	}
-
+	/**
+	* Sends a set byte array to all connected clients, aiming to reach the robot
+	*/
 	public void sendByteToAll() {
 		String[] testStr = {"move","*","0","*","0","*","-140","*"};
 		byte[] tester = stringToByte(testStr);
@@ -123,7 +157,13 @@ public class WebCommunication extends WebSocketServer{
 		}
 	}
 
-	private static byte[] stringToByte(String[] stringArray) {
+
+	/**
+	* Converts a String array into a byte array
+	*@param stringArray The String array to be converted
+	*@return data The converted byte array
+	*/
+	public static byte[] stringToByte(String[] stringArray) {
         ArrayList<Byte> tempData = new ArrayList<Byte>();
         byte[] finishedData;
         for (int i = 0; i < stringArray.length; i++) {

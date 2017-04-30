@@ -1,0 +1,6 @@
+TODO
+-Comment code
+-Format code
+-Conduct testing
+-Conduct experiments
+-Write it all up

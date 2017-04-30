@@ -5,11 +5,11 @@ var five = require('johnny-five'),
 	board = new five.Board(),
   servo1,servo2,servo3;
 
-var server = new ws("ws://127.0.0.1:8080/");
+//var server = new ws("ws://127.0.0.1:8080/");
 
 
 board.on("ready", function() {
-	server.send("Board connected");
+	//server.send("Board connected");
 	servo1 = new five.Servo({
 		pin: 12,
 		range: [0,90],
@@ -58,12 +58,13 @@ board.on("ready", function() {
       tap: tap
     });
 
-  server.send("Robert ready");
+  //server.send("Robert ready");
 });
 
 /*NOT MY CODE*/
 
 Number.prototype.map = function ( in_min , in_max , out_min , out_max ) {
+  console.log("THIS: "+this);
   return ( this - in_min ) * ( out_max - out_min ) / ( in_max - in_min ) + out_min;
 }
 
@@ -99,10 +100,14 @@ go = function(x, y, z) {
   rotated = rotate(reflected[0],reflected[1]);
 
   angles = ik.inverse(rotated[0], rotated[1], z);
+  console.log(angles[1]);
+  console.log(angles[1].map(0,90,8,90));
   servo1.to((angles[1]).map( 0 , 90 , 8 , 90 ));
   servo2.to((angles[2]).map( 0 , 90 , 8 , 90 ));
   servo3.to((angles[3]).map( 0 , 90 , 8 , 90 ));
   console.log(angles);
+
+  console.log(angles[1].map(0,90,8,90));
 }
 
 
@@ -127,46 +132,54 @@ disconnect =function() {
 }
 
 
-server.onopen = function() {
-    console.log("Opened!");
-    server.send("index.js connected");
-};
+// server.onopen = function() {
+//     console.log("Opened!");
+//     server.send("index.js connected");
+// };
 
-server.onmessage = function (evt) {
-    var strArray = [];
-    var func = evt.data.toString();
-    var tempString = "";
-    for(var i = 0;i<func.length;i++) {
+// server.onmessage = function (evt) {
+//     var strArray = [];
+//     var func = evt.data.toString();
+//     var tempString = "";
+//     for(var i = 0;i<func.length;i++) {
       
-      //if(!func.charAt(i) === "*") {
-      if(!(/[*]/.test(func.charAt(i)))){
-        tempString += func.charAt(i);
-      } else {
-        strArray[strArray.length] = tempString;
-        tempString = "";
-      }
+//       //if(!func.charAt(i) === "*") {
+//       if(!(/[*]/.test(func.charAt(i)))){
+//         tempString += func.charAt(i);
+//       } else {
+//         strArray[strArray.length] = tempString;
+//         tempString = "";
+//       }
       
-    }
+//     }
     
-    if(strArray[0] == "move") {
-        go(parseInt(strArray[1]),parseInt(strArray[2]),parseInt(strArray[3]));
-    } else if(strArray[0] == "tap") {
-        //tap();
-    } else if(strArray[0] == "disconnect") {
-       // disconnect();
-    } 
-    console.log("Message: " + evt.data);
-};
+//     if(strArray[0] == "move") {
+//         go(parseInt(strArray[1]),parseInt(strArray[2]),parseInt(strArray[3]));
+//     } else if(strArray[0] == "tap") {
+//         //tap();
+//     } else if(strArray[0] == "disconnect") {
+//        // disconnect();
+//     } 
+//     console.log("Message: " + evt.data);
+// };
 
-server.onclose = function() {
-    console.log("Robert Left");
-};
+// server.onclose = function() {
+//     console.log("Robert Left");
+// };
 
-server.onerror = function(err) {
-    console.log("Error: " + err);
-};
+// server.onerror = function(err) {
+//     console.log("Error: " + err);
+// };
 
 console.log("Waiting for device to connect...");
+var input = 50;
+
+testArray = new Array(input);
 
 
 
+console.log("Test 2: "+rotate(30,60));
+console.log("Test 3: "+reflect(40,50));
+console.log("Test 4: "+sin(30));
+console.log("Test 5: "+cos(60));
+//console.log("Test 1: "+testArray[0].map(0,100,20,90));
